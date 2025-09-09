@@ -4,6 +4,17 @@ var roleBuilder = require('role.builder');
 
 module.exports.loop = function () {
 
+    // Initialize role configuration if it doesn't exist
+    if (!Memory.roleConfig) {
+        console.log('Initializing roleConfig in Memory');
+        Memory.roleConfig = {
+            harvester: 2,
+            upgrader: 1,
+            builder: 1
+        };
+    }
+
+    // Clear memory of dead creeps
     for(var name in Memory.creeps) {
         if(!Game.creeps[name]) {
             delete Memory.creeps[name];
@@ -11,11 +22,13 @@ module.exports.loop = function () {
         }
     }
 
+    // Get current creep counts
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
     var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
 
-    if(harvesters.length < 2) {
+    // Spawning logic using memory configuration
+    if(harvesters.length < Memory.roleConfig.harvester) {
         // Find all sources in the room
         var sources = Game.spawns['Spawn1'].room.find(FIND_SOURCES);
         // Find a source that isn't being harvested yet
@@ -38,17 +51,18 @@ module.exports.loop = function () {
             }
         }
     }
-    else if(upgraders.length < 1) {
+    else if(upgraders.length < Memory.roleConfig.upgrader) {
         var newName = 'Upgrader' + Game.time;
         Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName,
             {memory: {role: 'upgrader'}});
     }
-    else if(builders.length < 1 && Game.spawns['Spawn1'].room.find(FIND_CONSTRUCTION_SITES).length > 0) {
+    else if(builders.length < Memory.roleConfig.builder && Game.spawns['Spawn1'].room.find(FIND_CONSTRUCTION_SITES).length > 0) {
         var newName = 'Builder' + Game.time;
         Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName,
             {memory: {role: 'builder'}});
     }
 
+    // Spawning visualization
     if(Game.spawns['Spawn1'].spawning) {
         var spawningCreep = Game.creeps[Game.spawns['Spawn1'].spawning.name];
         Game.spawns['Spawn1'].room.visual.text(
@@ -58,6 +72,7 @@ module.exports.loop = function () {
             {align: 'left', opacity: 0.8});
     }
 
+    // Run creep roles
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
         if(creep.memory.role == 'harvester') {
