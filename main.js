@@ -3,6 +3,7 @@ var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
 
 module.exports.loop = function () {
+    console.log('Tick Start: ' + Game.time);
 
     // Initialize role configuration if it doesn't exist
     if (!Memory.roleConfig) {
@@ -14,18 +15,25 @@ module.exports.loop = function () {
         };
     }
 
-    // Clear memory of dead creeps
-    for(var name in Memory.creeps) {
-        if(!Game.creeps[name]) {
-            delete Memory.creeps[name];
-            console.log('Clearing non-existing creep memory:', name);
+    // Clear memory of dead creeps, with error catching
+    try {
+        for(var name in Memory.creeps) {
+            if(!Game.creeps[name]) {
+                delete Memory.creeps[name];
+                console.log('Clearing non-existing creep memory:', name);
+            }
         }
+    } catch (e) {
+        console.log('Error while clearing creep memory: ' + e);
     }
+
 
     // Get current creep counts
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
     var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
+
+    console.log('Creep Counts: H:' + harvesters.length + ', U:' + upgraders.length + ', B:' + builders.length);
 
     // Spawning logic using memory configuration
     if(harvesters.length < Memory.roleConfig.harvester) {
