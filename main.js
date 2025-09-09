@@ -16,16 +16,34 @@ module.exports.loop = function () {
     var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
 
     if(harvesters.length < 2) {
-        var newName = 'Harvester' + Game.time;
-        Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName,
-            {memory: {role: 'harvester'}});
+        // Find all sources in the room
+        var sources = Game.spawns['Spawn1'].room.find(FIND_SOURCES);
+        // Find a source that isn't being harvested yet
+        for (var i = 0; i < sources.length; i++) {
+            var source = sources[i];
+            // Check if a harvester is already assigned to this source
+            var harvesters_assigned = _.filter(Game.creeps, (creep) =>
+                creep.memory.role == 'harvester' && creep.memory.sourceId == source.id);
+
+            if (harvesters_assigned.length == 0) {
+                // This source is free, let's assign it
+                var newName = 'Harvester' + Game.time;
+                Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName, {
+                    memory: {
+                        role: 'harvester',
+                        sourceId: source.id
+                    }
+                });
+                break; // Exit the loop once we've started spawning
+            }
+        }
     }
     else if(upgraders.length < 1) {
         var newName = 'Upgrader' + Game.time;
         Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName,
             {memory: {role: 'upgrader'}});
     }
-    else if(builders.length < 1) {
+    else if(builders.length < 1 && Game.spawns['Spawn1'].room.find(FIND_CONSTRUCTION_SITES).length > 0) {
         var newName = 'Builder' + Game.time;
         Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName,
             {memory: {role: 'builder'}});
