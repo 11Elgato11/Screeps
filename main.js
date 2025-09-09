@@ -21,11 +21,12 @@ module.exports.loop = function () {
         }
     }
 
-    // Adopt any orphan creeps
+    // Adopt any orphan or unrecognized creeps
+    const KNOWN_ROLES = ['harvester', 'upgrader', 'builder'];
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
-        if(!creep.memory.role) {
-            console.log('Found orphan creep, adopting as upgrader: ' + name);
+        if(!creep.memory.role || KNOWN_ROLES.indexOf(creep.memory.role) === -1) {
+            console.log('Found unrecognized/orphan creep, re-assigning as upgrader: ' + name);
             creep.memory.role = 'upgrader';
         }
     }
