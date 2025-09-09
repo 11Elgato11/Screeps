@@ -2,6 +2,16 @@ var roleHarvester = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
+
+        // Self-correction for legacy harvesters without a sourceId
+        if (creep.memory.sourceId === undefined) {
+            console.log('Harvester ' + creep.name + ' has no sourceId, assigning one.');
+            var sources = creep.room.find(FIND_SOURCES);
+            // A simple way to distribute un-assigned harvesters
+            var index = (creep.name.charCodeAt(creep.name.length - 1)) % sources.length;
+            creep.memory.sourceId = sources[index].id;
+        }
+
         if(creep.memory.harvesting && creep.store.getFreeCapacity() == 0) {
             creep.memory.harvesting = false;
             creep.say('🔄 deliver');
