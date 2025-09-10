@@ -7,7 +7,11 @@ var autospawn = {
      */
     createCreepBody: function(energy, role) {
         var body = [];
-        var numParts = Math.floor(energy / 200);
+        var segmentCost = BODYPART_COST[WORK] + BODYPART_COST[CARRY] + BODYPART_COST[MOVE]; // 200
+        var numParts = Math.floor(energy / segmentCost);
+
+        // Make sure we don't exceed the 50 parts limit
+        numParts = Math.min(numParts, Math.floor(50 / 3));
 
         for (var i = 0; i < numParts; i++) {
             body.push(WORK);
@@ -17,6 +21,11 @@ var autospawn = {
         }
         for (var i = 0; i < numParts; i++) {
             body.push(MOVE);
+        }
+
+        // If we can't even afford a basic creep, spawn a basic one and let the spawner wait.
+        if (body.length == 0) {
+            return [WORK, CARRY, MOVE];
         }
 
         return body;
@@ -42,7 +51,7 @@ var autospawn = {
                 if (harvesters_assigned.length == 0) {
                     // This source is free, let's assign it
                     var newName = 'Harvester' + Game.time;
-                    var energy = Game.spawns['Spawn1'].room.energyAvailable;
+                    var energy = Game.spawns['Spawn1'].room.energyCapacityAvailable;
                     var body = this.createCreepBody(energy, 'harvester');
                     Game.spawns['Spawn1'].spawnCreep(body, newName, {
                         memory: {
@@ -56,14 +65,14 @@ var autospawn = {
         }
         else if(upgraders.length < Memory.roleConfig.upgrader) {
             var newName = 'Upgrader' + Game.time;
-            var energy = Game.spawns['Spawn1'].room.energyAvailable;
+            var energy = Game.spawns['Spawn1'].room.energyCapacityAvailable;
             var body = this.createCreepBody(energy, 'upgrader');
             Game.spawns['Spawn1'].spawnCreep(body, newName,
                 {memory: {role: 'upgrader'}});
         }
         else if(builders.length < Memory.roleConfig.builder && Game.spawns['Spawn1'].room.find(FIND_CONSTRUCTION_SITES).length > 0) {
             var newName = 'Builder' + Game.time;
-            var energy = Game.spawns['Spawn1'].room.energyAvailable;
+            var energy = Game.spawns['Spawn1'].room.energyCapacityAvailable;
             var body = this.createCreepBody(energy, 'builder');
             Game.spawns['Spawn1'].spawnCreep(body, newName,
                 {memory: {role: 'builder'}});
